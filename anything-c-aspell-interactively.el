@@ -1,13 +1,75 @@
-(defvar anything-aspell-interactively-program "aspell"
-  "An aspell program file name for the `start-process'")
-(defvar anything-aspell-interactively-lang nil
-  "A language code to be passed as the aspell program's \"-l\" option if any.")
+;;; anything-c-aspell-interactively.el --- Interactive aspell with `anything'.
+
+;; Copyright (C) 2009 Takeshi Banse <takebi@laafc.net>
+;; Author: Takeshi Banse <takebi@laafc.net>
+;; Keywords: convenience, wp, unix, anything
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+
+;;; Commentary:
+;;
+;; Interactive aspell with Anything interface. This is just an
+;; "aspell -a"'s anything interface.
+
+;;; Setup:
+;;
+;; (require 'anything-c-aspell-interactively)
+;; (define-key global-map "\C-c\C-z" 'anything-c-aspell-interactively)
+
+;;; Note:
+;;
+;; This package requires a working executable, aspell.
+
+;;; Commands:
+;;
+;; Below are complete command list:
+;;
+;;  `anything-c-aspell-interactively'
+;;    Interactive aspell with `anything'.
+;;
+;;; Customizable Options:
+;;
+;; Below are customizable option list:
+;;
+;;  `anything-aspell-interactively-program'
+;;    *An aspell program file name for the `start-process'.
+;;    default = "aspell"
+;;  `anything-aspell-interactively-lang'
+;;    *A language code to be passed as the aspell program's "-l" option if any.
+;;    default = nil
+
+;;; Code:
+
+(require 'anything)
+
+(defcustom anything-aspell-interactively-program "aspell"
+  "*An aspell program file name for the `start-process'."
+  :type '(string :tag "Program")
+  :group 'anything-config)
+(defcustom anything-aspell-interactively-lang nil
+  "*A language code to be passed as the aspell program's \"-l\" option if any."
+  :type '(choice (const nil) string)
+  :group 'anything-config)
+
 (defun* anything-aspell-interactively-any-buffer->sources
     (&optional (any-name (anything-attr 'name))
                (any-buffer anything-buffer)
                (action (anything-attr 'action))
                (persistent-action (anything-attr 'persistent-action)))
-  "Convert un-classificed aspell's ANY-NAME candidates on ANY-BUFFER into classified sources for `anything'.
+  "Convert un-classified aspell's ANY-NAME candidates on ANY-BUFFER into classified sources for `anything'.
 
   ACTION and PERSISTENT-ACTION are for the classified sources' respectively."
   (labels
@@ -57,10 +119,11 @@
                                     (cons line
                                           (progn
                                             (goto-char (+ 2 (point)))
-                                            (word-at-point))))
+                                            (thing-at-point 'word))))
                                    (t line))
                          do (forward-line 1)))))))
          nil nil nil)))
+
 (defvar anything-c-source-aspell-interactively
   '((name . "Aspell interactively")
     (match identity)
@@ -108,10 +171,12 @@
     (persistent-action . kill-new)
     (requires-pattern . 3)))
 ;; (anything 'anything-c-source-aspell-interactively)
-(defun anything-c-source-aspell-interactively ()
+
+(defun anything-c-aspell-interactively ()
+  "Interactive aspell with `anything'."
   (interactive)
   (anything 'anything-c-source-aspell-interactively
-            (when current-prefix-arg (word-at-point))
+            (when current-prefix-arg (thing-at-point 'word))
             nil nil nil
             "*anything aspell interactively*"))
 
