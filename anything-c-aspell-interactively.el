@@ -154,18 +154,20 @@
     (action-transformer
      . (lambda (actions _selection)
          (let ((ss (anything-c-aspell-interactively-any-buffer->sources)))
-           (append actions
-                   (when ss
-                     (list
-                      (cons
-                       "Classify with anything"
-                       (lexical-let ((ss ss))
-                         (lambda (_)
-                           (anything-aif (get-buffer anything-action-buffer)
-                               (kill-buffer it))
-                           (anything-other-buffer
-                            ss
-                            "*anything aspell classification*"))))))))))
+           (if (not (cdr ss))
+               actions
+             (append actions
+                     (when ss
+                       (list
+                        (cons
+                         "Classify with anything"
+                         (lexical-let ((ss ss))
+                           (lambda (_)
+                             (anything-aif (get-buffer anything-action-buffer)
+                                 (kill-buffer it))
+                             (anything-other-buffer
+                              ss
+                              "*anything aspell classification*")))))))))))
     (action . (("Insert" . insert)
                ("Copy result to kill-ring" . kill-new)
                ("Replace"
