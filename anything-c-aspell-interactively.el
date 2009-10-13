@@ -91,24 +91,10 @@
                 (rec (cdr xs) name (cons (car xs) cands) acc)))))
     (rec (with-current-buffer any-buffer
            (save-excursion
-             (let* ((beg (loop with pos
-                               initially (goto-char (point-min))
-                               while (setq pos
-                                           (next-single-property-change
-                                            (point) 'anything-header))
-                               do (goto-char pos)
-                               if (equal any-name
-                                         (buffer-substring-no-properties
-                                          (point-at-bol) (point-at-eol)))
-                               return pos))
-                    (end (or (progn
-                               (forward-line 1)
-                               (next-single-property-change (point)
-                                                            'anything-header))
-                             (point-max))))
-               (when (and beg end)
+             (let ((bounds (acai-bounds-of-any-buffer any-name any-buffer)))
+               (when bounds
                  (save-restriction
-                   (narrow-to-region beg end) ;; To one and only one source.
+                   (narrow-to-region (car bounds) (cdr bounds))
                    (loop until (eobp)
                          initially (goto-char (point-min)) (forward-line 1)
                          for line = (buffer-substring-no-properties
@@ -123,6 +109,25 @@
                                    (t line))
                          do (forward-line 1)))))))
          nil nil nil)))
+(defun acai-bounds-of-any-buffer (any-name any-buffer)
+  (let* ((beg (loop with pos
+                    initially (goto-char (point-min))
+                    while (setq pos
+                                (next-single-property-change
+                                 (point) 'anything-header))
+                    do (goto-char pos)
+                    if (equal any-name
+                              (buffer-substring-no-properties
+                               (point-at-bol) (point-at-eol)))
+                    return pos))
+         (end (or (progn
+                    (forward-line 1)
+                    (next-single-property-change (point)
+                                                 'anything-header))
+                  (and beg (point-max)))))
+    (when (and beg end)
+      (cons beg end))))
+
 (defvar anything-c-source-aspell-interactively
   '((name . "Aspell interactively")
     (match identity)
@@ -191,6 +196,28 @@
 (dont-compile
   (when (fboundp 'expectations)
     (expectations
+      (desc "acai-bounds-of-any-buffer")
+      (expect nil
+        (with-temp-buffer
+          (acai-bounds-of-any-buffer "any-name" (current-buffer))))
+      (expect nil
+        (with-temp-buffer
+          (insert (mapconcat
+                   'identity
+                   (list
+                    (propertize "not any-name" 'anything-header t)
+                    "foo")
+                   "\n"))
+          (acai-bounds-of-any-buffer "any-name" (current-buffer))))
+      (expect (type cons)
+        (with-temp-buffer
+          (insert (mapconcat
+                   'identity
+                   (list
+                    (propertize "any-name" 'anything-header t)
+                    "foo")
+                   "\n"))
+          (acai-bounds-of-any-buffer "any-name" (current-buffer)))) 
       (desc "anything-c-aspell-interactively-any-buffer->sources")
       (expect nil
         (with-temp-buffer
@@ -202,17 +229,6 @@
                    'identity
                    (list
                     (propertize "not aspell" 'anything-header t)
-                    "foo"
-                    "bar")
-                   "\n"))
-          (anything-c-aspell-interactively-any-buffer->sources
-           "aspell" (current-buffer) "action" "persistent-action")))
-      (expect nil
-        (with-temp-buffer
-          (insert (mapconcat
-                   'identity
-                   (list
-                    (propertize "aspell" 'anything-header t)
                     "foo"
                     "bar")
                    "\n"))
