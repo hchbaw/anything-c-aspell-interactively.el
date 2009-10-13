@@ -44,10 +44,10 @@
 ;;
 ;; Below are customizable option list:
 ;;
-;;  `anything-aspell-interactively-program'
+;;  `anything-c-aspell-interactively-program'
 ;;    *An aspell program file name for the `start-process'.
 ;;    default = "aspell"
-;;  `anything-aspell-interactively-lang'
+;;  `anything-c-aspell-interactively-lang'
 ;;    *A language code to be passed as the aspell program's "-l" option if any.
 ;;    default = nil
 
@@ -55,16 +55,16 @@
 
 (require 'anything)
 
-(defcustom anything-aspell-interactively-program "aspell"
+(defcustom anything-c-aspell-interactively-program "aspell"
   "*An aspell program file name for the `start-process'."
   :type '(string :tag "Program")
   :group 'anything-config)
-(defcustom anything-aspell-interactively-lang nil
+(defcustom anything-c-aspell-interactively-lang nil
   "*A language code to be passed as the aspell program's \"-l\" option if any."
   :type '(choice (const nil) string)
   :group 'anything-config)
 
-(defun* anything-aspell-interactively-any-buffer->sources
+(defun* anything-c-aspell-interactively-any-buffer->sources
     (&optional (any-name (anything-attr 'name))
                (any-buffer anything-buffer)
                (action (anything-attr 'action))
@@ -123,16 +123,16 @@
                                    (t line))
                          do (forward-line 1)))))))
          nil nil nil)))
-
 (defvar anything-c-source-aspell-interactively
   '((name . "Aspell interactively")
     (match identity)
     (candidates
      . (lambda ()
-         (let* ((args `("-a" ,@(anything-aif anything-aspell-interactively-lang
+         (let* ((args `("-a"
+                        ,@(anything-aif anything-c-aspell-interactively-lang
                                              `("-l" ,it))))
                 (proc (apply 'start-process "aspell-process" nil
-                             anything-aspell-interactively-program args)))
+                             anything-c-aspell-interactively-program args)))
            (prog1 proc
              (process-send-string proc (concat anything-pattern "\n"))))))
     (candidate-transformer
@@ -153,7 +153,7 @@
                            (split-string anything-pattern "\\W+"))))))
     (action-transformer
      . (lambda (actions _selection)
-         (let ((ss (anything-aspell-interactively-any-buffer->sources)))
+         (let ((ss (anything-c-aspell-interactively-any-buffer->sources)))
            (append actions
                    (when ss
                      (list
@@ -183,10 +183,10 @@
 (dont-compile
   (when (fboundp 'expectations)
     (expectations
-      (desc "anything-aspell-interactively-any-buffer->sources")
+      (desc "anything-c-aspell-interactively-any-buffer->sources")
       (expect nil
         (with-temp-buffer
-          (anything-aspell-interactively-any-buffer->sources
+          (anything-c-aspell-interactively-any-buffer->sources
            "aspell" (current-buffer) "action" "persistent-action")))
       (expect nil
         (with-temp-buffer
@@ -197,7 +197,7 @@
                     "foo"
                     "bar")
                    "\n"))
-          (anything-aspell-interactively-any-buffer->sources
+          (anything-c-aspell-interactively-any-buffer->sources
            "aspell" (current-buffer) "action" "persistent-action")))
       (expect nil
         (with-temp-buffer
@@ -208,7 +208,7 @@
                     "foo"
                     "bar")
                    "\n"))
-          (anything-aspell-interactively-any-buffer->sources
+          (anything-c-aspell-interactively-any-buffer->sources
            "aspell" (current-buffer) "action" "persistent-action")))
       (expect '(((name . "Aspell Classified (* foo)")
                  (candidates "foo" "bar")
@@ -222,7 +222,7 @@
                     "* foo"
                     "bar")
                    "\n"))
-          (anything-aspell-interactively-any-buffer->sources
+          (anything-c-aspell-interactively-any-buffer->sources
            "aspell" (current-buffer) "action" "persistent-action")))
       (expect '(((name . "Aspell Classified (& foo)")
                  (candidates "foo" "foo")
@@ -245,7 +245,7 @@
                     "* bar"
                     "blah")
                    "\n"))
-          (anything-aspell-interactively-any-buffer->sources
+          (anything-c-aspell-interactively-any-buffer->sources
            "aspell" (current-buffer) "action" "persistent-action")))
       )))
 
