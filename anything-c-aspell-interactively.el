@@ -167,7 +167,13 @@
                             ss
                             "*anything aspell classification*"))))))))))
     (action . (("Insert" . insert)
-               ("Copy result to kill-ring" . kill-new)))
+               ("Copy result to kill-ring" . kill-new)
+               ("Replace"
+                . (lambda (c)
+                    (let ((b (bounds-of-thing-at-point 'word)))
+                      (delete-region (car b) (cdr b))
+                      (goto-char (car b))
+                      (insert c))))))
     (persistent-action . kill-new)
     (requires-pattern . 3)))
 ;; (anything 'anything-c-source-aspell-interactively)
